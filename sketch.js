@@ -139,6 +139,7 @@ function setup() {
 
 function draw() {
   //print(height)
+  
   tweak = slider_tweak.value();
   finalDepth = depth + tweak;
   depthLabel.html("Depth: " + finalDepth / snapping);
