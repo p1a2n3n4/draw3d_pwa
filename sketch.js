@@ -666,26 +666,26 @@ function updateUI() {
 
   slider_r.position(-20 + width - width / 5, 10);
   slider_r.size(width / 5);
-  // slider_r.input(() => {
-  //   erase = true;
-  // });
-  //slider_r.mouseOut(() => (erase = false));
+  slider_r.input(() => {
+    erase = true;
+  });
+  slider_r.changed(() => (erase = false));
   slider_r.style("accent-color", "rgb(255,100,100)");
 
   slider_g.position(-20 + width - width / 5, 30);
   slider_g.size(width / 5);
-  // slider_g.input(() => {
-  //   erase = true;
-  // });
-  //slider_g.mouseOut(() => (erase = false));
+  slider_g.input(() => {
+    erase = true;
+  });
+  slider_g.changed(() => (erase = false));
   slider_g.style("accent-color", "rgb(100,255,100)");
 
   slider_b.position(-20 + width - width / 5, 50);
   slider_b.size(width / 5);
-  // slider_b.input(() => {
-  //   erase = true;
-  // });
-  //slider_b.mouseOut(() => (erase = false));
+  slider_b.input(() => {
+    erase = true;
+  });
+  slider_b.changed(() => (erase = false));
   slider_b.style("accent-color", "rgb(100,100,255)");
 
   slider_a.style("transform-origin", "left center");
@@ -693,20 +693,20 @@ function updateUI() {
   slider_a.position(20, height / 4 + 170);
   slider_a.style("transform", "rotate(-90deg)");
   slider_a.size(height / 4);
-  // slider_a.input(() => {
-  //   erase = true;
-  // });
-  //slider_a.mouseOut(() => (erase = false));
+  slider_a.input(() => {
+    erase = true;
+  });
+  slider_a.changed(() => (erase = false));
   slider_a.class("slide");
 
   slider_s.style("transform-origin", "left center");
   slider_s.style("transform", "rotate(-90deg)");
   slider_s.position(20, height / 2 + 180);
   slider_s.size(height / 4);
-  // slider_s.input(() => {
-  //   erase = true;
-  // });
-  // slider_s.mouseOut(() => (erase = false));
+  slider_s.input(() => {
+    erase = true;
+  });
+  slider_s.changed(() => (erase = false));
   slider_s.class("slide");
 
   if (height < 390) {
@@ -718,19 +718,19 @@ function updateUI() {
 
   slider_noise.position(width / 2 - width / 8, height - 50);
   slider_noise.size(width / 4);
-  // slider_noise.input(() => {
-  //   erase = true;
-  // });
-  // slider_noise.mouseOut(() => (erase = false));
-  //slider_noise.class("slide");
+  slider_noise.input(() => {
+    erase = true;
+  });
+  slider_noise.changed(() => (erase = false));
+  slider_noise.class("slide");
   slider_noise.style("accent-color", "#FF9800");
 
   slider_tweak.position(100, 90);
   slider_tweak.size(100);
-  // slider_tweak.input(() => {
-  //   erase = true;
-  // });
-  // slider_tweak.mouseOut(() => (erase = false));
+  slider_tweak.input(() => {
+    erase = true;
+  });
+  slider_tweak.changed(() => (erase = false));
   slider_tweak.class("slide");
 }
 
