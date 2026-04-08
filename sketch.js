@@ -587,8 +587,8 @@ function updateUI() {
   side_view.size(60, 60);
 
   fc_button.position(width / 2 - 40, 10);
-  fc_button.mouseOver(() => (erase = true));
-  fc_button.mouseOut(() => (erase = false));
+  // fc_button.mouseOver(() => (erase = true));
+  // fc_button.mouseOut(() => (erase = false));
   fc_button.mousePressed(update_fc);
   fc_button.class("Buttons");
   fc_button.size(80, 20);
@@ -604,8 +604,8 @@ function updateUI() {
   }
 
   fill_button.position(width - 50, 170);
-  fill_button.mouseOver(() => (erase = true));
-  fill_button.mouseOut(() => (erase = false));
+  // fill_button.mouseOver(() => (erase = true));
+  // fill_button.mouseOut(() => (erase = false));
   fill_button.mousePressed(toggle_fill);
   fill_button.class("Buttons");
   fill_button.size(40, 40);
