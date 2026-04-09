@@ -1,6 +1,20 @@
 let strokes = [];
+let redo_actions = [];
 let isRendering = false;
 let currentStroke = null;
+let touchesPrev = 0;
+
+// for undo
+let touchStartTime = 0;
+let undoDelay = 200; // milliseconds (0.5 sec)
+
+//ortho cam variable
+let zoom = 1;
+let panX = 0;
+let panY = 0;
+
+let lastDist = 0;
+let lastCenter = null;
 
 let show_export = false;
 let show_import = false;
@@ -139,7 +153,7 @@ function setup() {
 
 function draw() {
   //print(height)
-  
+
   tweak = slider_tweak.value();
   finalDepth = depth + tweak;
   depthLabel.html("Depth: " + finalDepth / snapping);
@@ -166,17 +180,25 @@ function draw() {
   //switch between orthographic and perspective
   if (move == false) {
     ortho();
+
+    scale(zoom);
+    translate(panX, panY);
+
     if (ui == true) {
       color_preview = true;
     }
     //------------cursor
     push();
+    let cursor_pos = getMouseWorldAtDepth();
     noFill();
     stroke(255, 255, 255, a - 50);
     strokeWeight(5);
-    ellipse(mouseX - width / 2, mouseY - height / 2, s);
+    ellipse(cursor_pos.x, cursor_pos.y, s);
     pop();
   } else if (move == true) {
+    zoom = 1;
+    panX = 0;
+    panY = 0;
     color_preview = false;
     perspective();
 
@@ -238,31 +260,85 @@ function draw() {
 function preview_plane() {
   if (on == false) {
     on = true;
-  
   } else if (on == true) {
     on = false;
   }
   print(on);
 }
 
+//----------------undo/redo
+
 function touchStarted() {
-  //-----tap undo------------
-  if ((touches.length === 2) & (move == false)) {
-    undo();
-    return false;
-  }
+  touchStartTime = millis(); // record the moment the touch begins
+  // store previous touch count if you need it
+  touchesPrev = touches.length;
+  //store current touch input on start
 }
 
 function touchEnded() {
+  let touchDuration = millis() - touchStartTime;
+  //tap undo +timer
+  if (touchDuration < undoDelay && touchesPrev === 2 && move === false) {
+    undo();
+  }
+  //tap redo plus timer
+  if (touchDuration < undoDelay && touchesPrev === 3 && move === false) {
+    redo();
+  }
+
+  // reset timer
+  touchStartTime = 0;
+
+  lastDist = 0;
+  lastCenter = null;
   currentStroke = null;
 }
 //---------------------draw line----------------------------
 function touchMoved() {
-  if (move == false && (erase == false) & (touches.length !== 2)) {
+  // ---------- PINCH + PAN ----------
+  if (touches.length === 2 && move === false) {
+    let t1 = touches[0];
+    let t2 = touches[1];
+
+    // distance between fingers (for zoom)
+    let d = dist(t1.x, t1.y, t2.x, t2.y);
+
+    // midpoint (for pan)
+    let cx = (t1.x + t2.x) / 2;
+    let cy = (t1.y + t2.y) / 2;
+
+    if (lastDist !== 0) {
+      // ----- ZOOM -----
+      let zoomFactor = d / lastDist;
+      zoom *= zoomFactor;
+
+      // clamp zoom (important)
+      zoom = constrain(zoom, 0.2, 5);
+
+      // ----- PAN -----
+      let dx = cx - lastCenter.x;
+      let dy = cy - lastCenter.y;
+
+      panX += dx / zoom; // divide by zoom = consistent movement
+      panY += dy / zoom;
+    }
+
+    lastDist = d;
+    lastCenter = createVector(cx, cy);
+
+    return false;
+  }
+
+  if (
+    move == false &&
+    (erase == false) & (touches.length !== 2) & (touches.length !== 3)
+  ) {
     // create stroke ONLY if none exists yet
     if (!currentStroke) {
       currentStroke = new ArtLine(color(r, g, b, a), s, sketchy, stroke_fill);
       strokes.push(currentStroke);
+
+      redo_actions = [];
     }
 
     let p = getMouseWorldAtDepth(finalDepth);
@@ -317,7 +393,21 @@ function plus() {
 
 function undo() {
   if (strokes.length > 0) {
+    redo_actions.push(strokes[strokes.length - 1]);
     strokes.pop();
+    print(redo_actions);
+  }
+
+  if (redo_actions.length > 5) {
+    redo_actions.shift();
+  }
+}
+
+//--------------redo----------------------
+
+function redo() {
+  if (redo_actions.length > 0) {
+    strokes.push(redo_actions.pop());
   }
 }
 
@@ -330,9 +420,8 @@ function apply_bg() {
 //------------------remap mouse----------------
 
 function getMouseWorldAtDepth(zPlane) {
-  // offset mouse from center
-  let mx = mouseX - width / 2;
-  let my = mouseY - height / 2;
+  let mx = (mouseX - width / 2) / zoom - panX;
+  let my = (mouseY - height / 2) / zoom - panY;
 
   return createVector(mx, my, zPlane);
 }
@@ -356,6 +445,12 @@ function keyPressed() {
   if (key === "z" && keyIsDown(CONTROL)) {
     erase = true;
     undo();
+    erase = false;
+  }
+
+  if (key === "y" && keyIsDown(CONTROL)) {
+    erase = true;
+    redo();
     erase = false;
   }
 }
@@ -406,9 +501,9 @@ function hide_export_menu(state) {
 
     save_button.hide();
     import_button.hide();
-    
-    if(!fullscreen()){
-    fc_button.hide();
+
+    if (!fullscreen()) {
+      fc_button.hide();
     }
   } else if (state == true) {
     turn_around.show();
@@ -417,9 +512,9 @@ function hide_export_menu(state) {
 
     save_button.show();
     import_button.show();
-      
-    if(!fullscreen()){
-    fc_button.show();
+
+    if (!fullscreen()) {
+      fc_button.show();
     }
   }
 }
@@ -501,8 +596,6 @@ function hide_ui(state) {
     slider_noise.hide();
     slider_tweak.hide();
   } else if (state == true) {
-    
-
     color_preview = true;
     view_button.show();
     add_button.show();
@@ -597,7 +690,7 @@ function updateUI() {
     fc_button.position(width - 90, 130);
   }
 
-  if (!fullscreen() & (ui == true) & show_export==true) {
+  if (!fullscreen() & (ui == true) & (show_export == true)) {
     fc_button.show();
   } else if (fullscreen()) {
     fc_button.hide();
@@ -722,7 +815,7 @@ function updateUI() {
     erase = true;
   });
   slider_noise.changed(() => (erase = false));
-  slider_noise.class("slide");
+  //slider_noise.class("slide");
   slider_noise.style("accent-color", "#FF9800");
 
   slider_tweak.position(100, 90);
@@ -747,7 +840,7 @@ function update_fc() {
     resizeCanvas(windowWidth, windowHeight);
 
     updateUI();
-    
+
     fc_button.hide();
   }
 }
