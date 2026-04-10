@@ -32,6 +32,20 @@ canvas {
   background-color: #FF9800;
 }
 
+.preview {
+  font-family: Quicksand;
+  background-color: rgba(var(--r), var(--g), var(--b));
+  color: white;
+  
+  border-radius: 100px;
+  outline-color: white;
+  border: none;
+  outline: none;
+  box-shadow: none
+    
+}
+
+
 
 .slide {
   -webkit-appearance: none;

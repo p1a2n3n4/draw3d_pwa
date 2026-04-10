@@ -58,6 +58,7 @@ let fill_button;
 let ui_button;
 let undo_button;
 let import_button;
+let col_prev;
 
 //------------button for exports/import
 let fileInput;
@@ -106,6 +107,9 @@ function setup() {
   fill_button = createButton("fill");
 
   ui_button = createButton("ui");
+
+  col_prev = createButton("");
+  col_prev.class("preview");
 
   //-----export ui-----
 
@@ -165,33 +169,28 @@ function draw() {
   s = slider_s.value();
   sketchy = slider_noise.value();
 
+  col_prev.elt.style.setProperty("--r", r);
+  col_prev.elt.style.setProperty("--g", g);
+  col_prev.elt.style.setProperty("--b", b);
+
   //print(strokes.length)
   background(bg);
-  //------------------draw color preview--------------
-  if (color_preview == true) {
-    push();
-    fill(r, g, b, a);
-    noStroke();
-    ellipse(width / 4, -height / 2 + 40, 50);
-
-    pop();
-  }
 
   //switch between orthographic and perspective
   if (move == false) {
-    ortho();
-
-    scale(zoom);
+    let w = width / 2 / zoom;
+    let h = height / 2 / zoom;
+    ortho(-w, w, -h, h, 0.1, 1000);
+    //scale(zoom);
     translate(panX, panY);
 
     if (ui == true) {
-      color_preview = true;
     }
     //------------cursor
     push();
     let cursor_pos = getMouseWorldAtDepth();
     noFill();
-    stroke(255, 255, 255, a - 50);
+    stroke(r, g, b, a - 50);
     strokeWeight(5);
     ellipse(cursor_pos.x, cursor_pos.y, s);
     pop();
@@ -199,7 +198,7 @@ function draw() {
     zoom = 1;
     panX = 0;
     panY = 0;
-    color_preview = false;
+
     perspective();
 
     if (!isRendering) {
@@ -582,6 +581,7 @@ function hide_ui(state) {
     prev_button.hide();
     fill_button.hide();
     undo_button.hide();
+    col_prev.hide();
 
     export_button.hide();
     import_button.hide();
@@ -606,6 +606,7 @@ function hide_ui(state) {
     prev_button.show();
     fill_button.show();
     undo_button.show();
+    col_prev.show();
 
     export_button.show();
     import_button.show();
@@ -709,6 +710,10 @@ function updateUI() {
   ui_button.mousePressed(ui_visible);
   ui_button.class("Buttons");
   ui_button.size(40, 40);
+
+  //color preview
+  col_prev.position(width - width / 4 - 20, 15);
+  col_prev.size(50, 50);
 
   //--------export buttons--------------------------------
 
