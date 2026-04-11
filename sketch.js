@@ -180,7 +180,7 @@ function draw() {
   if (move == false) {
     let w = width / 2 / zoom;
     let h = height / 2 / zoom;
-    ortho(-w, w, -h, h, 0.1, 1000);
+    ortho(-w, w, -h, h, 0.1, 20000);
     //scale(zoom);
     translate(panX, panY);
 
