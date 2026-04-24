@@ -71,9 +71,9 @@ let render_button;
 
 let depthLabel;
 
-let slider_r;
-let slider_g;
-let slider_b;
+// let slider_r;
+// let slider_g;
+// let slider_b;
 let slider_a;
 let slider_s;
 let slider_noise;
@@ -108,7 +108,7 @@ function setup() {
 
   ui_button = createButton("ui");
 
-  col_prev = createButton("");
+  col_prev = createColorPicker('white')
   col_prev.class("preview");
 
   //-----export ui-----
@@ -127,11 +127,11 @@ function setup() {
   fileInput = createFileInput(loadDrawing);
 
   //--------------create sliders------------------
-  slider_r = createSlider(0, 255, 255);
+//   slider_r = createSlider(0, 255, 255);
 
-  slider_g = createSlider(0, 255, 255);
+//   slider_g = createSlider(0, 255, 255);
 
-  slider_b = createSlider(0, 255, 255);
+//   slider_b = createSlider(0, 255, 255);
 
   slider_a = createSlider(0, 255, 255);
 
@@ -161,10 +161,12 @@ function draw() {
   tweak = slider_tweak.value();
   finalDepth = depth + tweak;
   depthLabel.html("Depth: " + finalDepth / snapping);
+  
+  let c = col_prev.color()
 
-  r = slider_r.value();
-  g = slider_g.value();
-  b = slider_b.value();
+  r = red(c)
+  g = green(c)
+  b = blue(c)
   a = slider_a.value();
   s = slider_s.value();
   sketchy = slider_noise.value();
@@ -588,9 +590,9 @@ function hide_ui(state) {
 
     depthLabel.hide();
 
-    slider_r.hide();
-    slider_g.hide();
-    slider_b.hide();
+    // slider_r.hide();
+    // slider_g.hide();
+    // slider_b.hide();
     slider_a.hide();
     slider_s.hide();
     slider_noise.hide();
@@ -613,9 +615,9 @@ function hide_ui(state) {
 
     depthLabel.show();
 
-    slider_r.show();
-    slider_g.show();
-    slider_b.show();
+    // slider_r.show();
+    // slider_g.show();
+    // slider_b.show();
     slider_a.show();
     slider_s.show();
     slider_noise.show();
@@ -670,10 +672,10 @@ function updateUI() {
   undo_button.class("Buttons");
   undo_button.size(60, 60);
 
-  bg_button.position(width - width / 5 - 10, 80);
+  bg_button.position(width - width / 8 - 10, 80);
   bg_button.mousePressed(apply_bg);
   bg_button.class("Buttons");
-  bg_button.size(width / 5, 40);
+  bg_button.size(width / 8, 40);
 
   side_view.position(70, 10);
   side_view.mousePressed(change_plane);
@@ -712,7 +714,7 @@ function updateUI() {
   ui_button.size(40, 40);
 
   //color preview
-  col_prev.position(width - width / 4 - 20, 15);
+  col_prev.position(width - 60, 15);
   col_prev.size(50, 50);
 
   //--------export buttons--------------------------------
@@ -762,29 +764,29 @@ function updateUI() {
 
   //--------------create sliders------------------
 
-  slider_r.position(-20 + width - width / 5, 10);
-  slider_r.size(width / 5);
-  slider_r.input(() => {
-    erase = true;
-  });
-  slider_r.changed(() => (erase = false));
-  slider_r.style("accent-color", "rgb(255,100,100)");
+//   slider_r.position(-20 + width - width / 5, 10);
+//   slider_r.size(width / 5);
+//   slider_r.input(() => {
+//     erase = true;
+//   });
+//   slider_r.changed(() => (erase = false));
+//   slider_r.style("accent-color", "rgb(255,100,100)");
 
-  slider_g.position(-20 + width - width / 5, 30);
-  slider_g.size(width / 5);
-  slider_g.input(() => {
-    erase = true;
-  });
-  slider_g.changed(() => (erase = false));
-  slider_g.style("accent-color", "rgb(100,255,100)");
+//   slider_g.position(-20 + width - width / 5, 30);
+//   slider_g.size(width / 5);
+//   slider_g.input(() => {
+//     erase = true;
+//   });
+//   slider_g.changed(() => (erase = false));
+//   slider_g.style("accent-color", "rgb(100,255,100)");
 
-  slider_b.position(-20 + width - width / 5, 50);
-  slider_b.size(width / 5);
-  slider_b.input(() => {
-    erase = true;
-  });
-  slider_b.changed(() => (erase = false));
-  slider_b.style("accent-color", "rgb(100,100,255)");
+//   slider_b.position(-20 + width - width / 5, 50);
+//   slider_b.size(width / 5);
+//   slider_b.input(() => {
+//     erase = true;
+//   });
+//   slider_b.changed(() => (erase = false));
+//   slider_b.style("accent-color", "rgb(100,100,255)");
 
   slider_a.style("transform-origin", "left center");
   slider_a.style("transform", "rotate(-90deg)");
