@@ -91,4 +91,21 @@ canvas {
   border-radius: 50%;
 }
 
+/* iro.js color picker container */
+#picker {
+  position: absolute;
+   top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
 
+  /* optional styling to match your UI */
+/*   background: rgba(30, 30, 30, 0.8); */
+  border-radius: 10px;
+  padding: 10px;
+}
+
+/* ensure iro internal elements stay clickable */
+#picker * {
+  pointer-events: auto;
+}

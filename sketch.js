@@ -1,8 +1,17 @@
+let isPickingColor = false;
+let isEyedropper = false;
+
+
+
 let strokes = [];
 let redo_actions = [];
 let isRendering = false;
 let currentStroke = null;
 let touchesPrev = 0;
+
+let picker;
+let currentColor;
+let show_color_picker = false;
 
 // for undo
 let touchStartTime = 0;
@@ -59,6 +68,7 @@ let ui_button;
 let undo_button;
 let import_button;
 let col_prev;
+let eraser_button 
 
 //------------button for exports/import
 let fileInput;
@@ -71,9 +81,6 @@ let render_button;
 
 let depthLabel;
 
-let slider_r;
-let slider_g;
-let slider_b;
 let slider_a;
 let slider_s;
 let slider_noise;
@@ -87,16 +94,18 @@ function setup() {
   frameRate(fps);
 
   // Create  buttons------------------------------------
-  view_button = createButton(view_button_text);
+  view_button = 
+    createButton('<span class="material-symbols-outlined">stylus</span>');
 
   minus_button = createButton("-");
 
   add_button = createButton("+");
 
-  undo_button = createButton("undo");
+  undo_button = 
+    createButton('<span class="material-symbols-outlined">undo</span>');
 
   bg = color(20, 20, 20);
-  bg_button = createButton("apply background");
+  bg_button = createButton('<span class="material-symbols-outlined">format_color_fill</span>');
 
   side_view = createButton(side[side_index]);
 
@@ -104,16 +113,42 @@ function setup() {
 
   prev_button = createButton("preview");
 
-  fill_button = createButton("fill");
+  fill_button = createButton('<span class="material-symbols-outlined">gesture</span>');
 
-  ui_button = createButton("ui");
+  ui_button = createButton('<span class="material-symbols-outlined">visibility</span>');
 
-  col_prev = createButton("");
+  col_prev = createButton(" ");
   col_prev.class("preview");
+
+  picker = new iro.ColorPicker("#picker", {
+  width: width/3,
+  color: "#ffffff"
+});
+
+// store as p5 color immediately
+currentColor = color(255, 255, 255);
+
+picker.on("color:change", (c) => {
+  currentColor = color(c.rgb.r, c.rgb.g, c.rgb.b);
+
+  // keep your r,g,b in sync (since you use them everywhere)
+  r = c.rgb.r;
+  g = c.rgb.g;
+  b = c.rgb.b;
+});
+  
+  hidePicker()
+  
+  
+  eyedropper_button = createButton('<span class="material-symbols-outlined">colorize</span>');
+  
+  eraser_button = createButton('<span class="material-symbols-outlined">ink_eraser</span>');
+   
+
 
   //-----export ui-----
 
-  export_button = createButton("📷");
+  export_button = createButton('<span class="material-symbols-outlined">photo_camera</span>');
 
   turn_around = createButton(animations[anim_index]);
 
@@ -127,11 +162,7 @@ function setup() {
   fileInput = createFileInput(loadDrawing);
 
   //--------------create sliders------------------
-  slider_r = createSlider(0, 255, 255);
 
-  slider_g = createSlider(0, 255, 255);
-
-  slider_b = createSlider(0, 255, 255);
 
   slider_a = createSlider(0, 255, 255);
 
@@ -156,22 +187,29 @@ function setup() {
 }
 
 function draw() {
+   print(isErasing)
+  
+ if (isEyedropper && mouseIsPressed) {
+  pickColor(mouseX, mouseY);
+}
   //print(height)
-
+   
   tweak = slider_tweak.value();
   finalDepth = depth + tweak;
   depthLabel.html("Depth: " + finalDepth / snapping);
+  
+ 
 
-  r = slider_r.value();
-  g = slider_g.value();
-  b = slider_b.value();
+  r = red(currentColor)
+  g = green(currentColor)
+  b = blue(currentColor)
   a = slider_a.value();
   s = slider_s.value();
   sketchy = slider_noise.value();
 
-  col_prev.elt.style.setProperty("--r", r);
+   col_prev.elt.style.setProperty("--r", r);
   col_prev.elt.style.setProperty("--g", g);
-  col_prev.elt.style.setProperty("--b", b);
+   col_prev.elt.style.setProperty("--b", b);
 
   //print(strokes.length)
   background(bg);
@@ -265,6 +303,7 @@ function preview_plane() {
   print(on);
 }
 
+
 //----------------undo/redo
 
 function touchStarted() {
@@ -277,7 +316,7 @@ function touchStarted() {
 function touchEnded() {
   let touchDuration = millis() - touchStartTime;
   //tap undo +timer
-  if (touchDuration < undoDelay && touchesPrev === 2 && move === false) {
+  if (touchDuration < undoDelay && touchesPrev === 2 && move === false ) {
     undo();
   }
   //tap redo plus timer
@@ -291,11 +330,13 @@ function touchEnded() {
   lastDist = 0;
   lastCenter = null;
   currentStroke = null;
+  
+  
 }
 //---------------------draw line----------------------------
 function touchMoved() {
   // ---------- PINCH + PAN ----------
-  if (touches.length === 2 && move === false) {
+  if (touches.length === 2 && move === false ) {
     let t1 = touches[0];
     let t2 = touches[1];
 
@@ -305,6 +346,10 @@ function touchMoved() {
     // midpoint (for pan)
     let cx = (t1.x + t2.x) / 2;
     let cy = (t1.y + t2.y) / 2;
+    
+    
+    
+
 
     if (lastDist !== 0) {
       // ----- ZOOM -----
@@ -329,26 +374,35 @@ function touchMoved() {
   }
 
   if (
-    move == false &&
-    (erase == false) & (touches.length !== 2) & (touches.length !== 3)
-  ) {
-    // create stroke ONLY if none exists yet
-    if (!currentStroke) {
-      currentStroke = new ArtLine(color(r, g, b, a), s, sketchy, stroke_fill);
-      strokes.push(currentStroke);
+  move == false &&
+  (!isPickingColor) &&
+  (touches.length !== 2) &&
+  (touches.length !== 3)
+) {
+  let p = getMouseWorldAtDepth(finalDepth);
+    
+    //-------eraser---------
 
-      redo_actions = [];
-    }
+  if (isErasing) {
+    eraseAtPoint(p);
+    return false;
+  }
 
-    let p = getMouseWorldAtDepth(finalDepth);
+  // -------- DRAW --------
+  if (!currentStroke) {
+    currentStroke = new ArtLine(color(r, g, b, a), s, sketchy, stroke_fill);
+    strokes.push(currentStroke);
+    redo_actions = [];
+  }
 
-    if (side[side_index] == "front") {
-      currentStroke.addPoint(p.x, p.y, p.z);
-    } else if (side[side_index] == "side") {
-      currentStroke.addPoint(-p.z, p.y, p.x);
-    } else if (side[side_index] == "top") {
-      currentStroke.addPoint(p.x, p.z, -p.y);
-    }
+  if (side[side_index] == "front") {
+    currentStroke.addPoint(p.x, p.y, p.z);
+  } else if (side[side_index] == "side") {
+    currentStroke.addPoint(-p.z, p.y, p.x);
+  } else if (side[side_index] == "top") {
+    currentStroke.addPoint(p.x, p.z, -p.y);
+  }
+
   }
 }
 
@@ -356,14 +410,14 @@ function touchMoved() {
 function toggle_view() {
   if (move == false) {
     move = true;
-    view_button_text = "move";
+    view_button.html('<span class="material-symbols-outlined">3d_rotation</span>');
   } else if (move == true) {
     move = false;
-    view_button_text = "draw";
+    view_button.html('<span class="material-symbols-outlined">stylus</span>');
     resetMatrix();
     resetOrbit();
   }
-  view_button.html(view_button_text);
+  //view_button.html(view_button_text);
 }
 
 //--------------------toggle side/front view--------------------
@@ -393,21 +447,15 @@ function plus() {
 function undo() {
   if (strokes.length > 0) {
     redo_actions.push(strokes[strokes.length - 1]);
-    strokes.pop();
-    print(redo_actions);
-  }
-
-  if (redo_actions.length > 5) {
-    redo_actions.shift();
-  }
+    strokes.pop(); print(redo_actions); 
+  } if (redo_actions.length > 5) { 
+    redo_actions.shift(); } 
 }
 
 //--------------redo----------------------
-
 function redo() {
   if (redo_actions.length > 0) {
-    strokes.push(redo_actions.pop());
-  }
+    strokes.push(redo_actions.pop()); } 
 }
 
 //----------change bg------------
@@ -440,6 +488,21 @@ function resetOrbit() {
 //------keyboard input----------
 
 function keyPressed() {
+  
+  
+if (key === 'e' || key === 'E') {
+  isErasing = !isErasing;
+  console.log(isErasing);
+}
+
+  
+    // eyedropper
+  if (key === 'i') {
+    pickColor(mouseX, mouseY);
+  }
+  
+  
+  
   // For Windows/Linux: Ctrl + Z
   if (key === "z" && keyIsDown(CONTROL)) {
     erase = true;
@@ -473,9 +536,11 @@ function toggle_fill() {
   if (stroke_fill == false) {
     stroke_fill = true;
     fill_button.style("background-color", "#FF9800");
+    fill_button.html('<span class="material-symbols-outlined">stroke_full</span>')
   } else if (stroke_fill == true) {
     stroke_fill = false;
     fill_button.style("background-color", "rgb(92,92,92)");
+    fill_button.html('<span class="material-symbols-outlined">gesture</span>')
   }
 }
 
@@ -565,290 +630,25 @@ function render() {
   }, duration * 1000);
 }
 
-//---------------hide ui  (ui button)--------------------------
 
-function hide_ui(state) {
-  if (state == false) {
-    show_export = false;
-    show_import = false;
-    color_preview = false;
-    view_button.hide();
-    add_button.hide();
-    minus_button.hide();
-    side_view.hide();
-    bg_button.hide();
-    fc_button.hide();
-    prev_button.hide();
-    fill_button.hide();
-    undo_button.hide();
-    col_prev.hide();
-
-    export_button.hide();
-    import_button.hide();
-
-    depthLabel.hide();
-
-    slider_r.hide();
-    slider_g.hide();
-    slider_b.hide();
-    slider_a.hide();
-    slider_s.hide();
-    slider_noise.hide();
-    slider_tweak.hide();
-  } else if (state == true) {
-    color_preview = true;
-    view_button.show();
-    add_button.show();
-    minus_button.show();
-    side_view.show();
-    bg_button.show();
-    fc_button.show();
-    prev_button.show();
-    fill_button.show();
-    undo_button.show();
-    col_prev.show();
-
-    export_button.show();
-    import_button.show();
-
-    depthLabel.show();
-
-    slider_r.show();
-    slider_g.show();
-    slider_b.show();
-    slider_a.show();
-    slider_s.show();
-    slider_noise.show();
-    slider_tweak.show();
-  }
-}
 //---------for the ui button--------------------
 function ui_visible() {
   hide_ui();
   if (ui == true) {
     ui = false;
     ui_button.style("background-color", "#4949494F");
+    ui_button.html('<span class="material-symbols-outlined">visibility_off</span>');
+    
   } else if (ui == false) {
     ui = true;
     ui_button.style("background-color", "rgb(92,92,92)");
+    ui_button.html('<span class="material-symbols-outlined">visibility</span>');
   }
   hide_ui(ui);
   updateUI();
 }
 
-//---------------------------------------draw ui----------------------------------
 
-function updateUI() {
-  hide_export_menu(show_export);
-  hide_import_menu(show_import);
-  // Create  buttons------------------------------------
-
-  view_button.position(0, 10);
-  view_button.mousePressed(toggle_view);
-  view_button.class("Buttons");
-  view_button.size(60, 60);
-
-  minus_button.position(10, 120);
-  minus_button.mousePressed(decrease);
-  minus_button.class("Buttons");
-  minus_button.size(35, 35);
-
-  add_button.position(50, 120);
-  add_button.mousePressed(plus);
-  add_button.class("Buttons");
-  add_button.size(35, 35);
-
-  prev_button.position(100, 120);
-  prev_button.mousePressed(preview_plane);
-  prev_button.class("Buttons");
-  prev_button.size(100, 35);
-
-  undo_button.position(140, 10);
-  //undo_button.mouseOver(() => erase = true);
-  //undo_button.mouseOut(() => erase = false);
-  undo_button.mousePressed(undo);
-  undo_button.class("Buttons");
-  undo_button.size(60, 60);
-
-  bg_button.position(width - width / 5 - 10, 80);
-  bg_button.mousePressed(apply_bg);
-  bg_button.class("Buttons");
-  bg_button.size(width / 5, 40);
-
-  side_view.position(70, 10);
-  side_view.mousePressed(change_plane);
-  side_view.class("Buttons");
-  side_view.size(60, 60);
-
-  fc_button.position(width / 2 - 40, 10);
-  // fc_button.mouseOver(() => (erase = true));
-  // fc_button.mouseOut(() => (erase = false));
-  fc_button.mousePressed(update_fc);
-  fc_button.class("Buttons");
-  fc_button.size(80, 20);
-
-  if (width < height) {
-    fc_button.position(width - 90, 130);
-  }
-
-  if (!fullscreen() & (ui == true) & (show_export == true)) {
-    fc_button.show();
-  } else if (fullscreen()) {
-    fc_button.hide();
-  }
-
-  fill_button.position(width - 50, 170);
-  // fill_button.mouseOver(() => (erase = true));
-  // fill_button.mouseOut(() => (erase = false));
-  fill_button.mousePressed(toggle_fill);
-  fill_button.class("Buttons");
-  fill_button.size(40, 40);
-
-  ui_button.position(width - 50, height - 60);
-  //ui_button.mouseOver(() => erase = true);
-  //ui_button.mouseOut(() => erase = false);
-  ui_button.mousePressed(ui_visible);
-  ui_button.class("Buttons");
-  ui_button.size(40, 40);
-
-  //color preview
-  col_prev.position(width - width / 4 - 20, 15);
-  col_prev.size(50, 50);
-
-  //--------export buttons--------------------------------
-
-  export_button.position(width - 50, height - 120);
-  export_button.mousePressed(export_vis);
-  export_button.class("Buttons");
-  export_button.size(40, 40);
-
-  turn_around.position(width - 90, 270);
-  turn_around.mousePressed(switch_anim);
-  turn_around.class("Buttons");
-  turn_around.size(80, 40);
-
-  render_button.position(width - 90, 330);
-  render_button.mousePressed(render);
-  render_button.class("Buttons");
-  render_button.size(80, 40);
-
-  //--------import
-
-  import_button.position(width - 60, height - 180);
-  import_button.mousePressed(import_vis);
-  import_button.class("Buttons");
-  import_button.size(50, 40);
-
-  save_button.position(width - 90, 390);
-  save_button.mousePressed(saveDrawing);
-  save_button.class("Buttons");
-  save_button.size(80, 40);
-  fileInput.position(width - 250, height - 170);
-  fileInput.style("color", "white");
-  fileInput.style("background", "#333");
-  fileInput.style("border", "20px");
-  fileInput.style("font-family", "Quicksand");
-  fileInput.size(190, 20);
-
-  if (height < 630) {
-    save_button.position(width / 2 - 40, height / 2 + 50);
-    fileInput.position(width / 2 - 95, height / 2 - 80);
-    import_button.size(80, 40);
-    import_button.position(width / 2 - 40, height / 2 - 50);
-    turn_around.position(width / 2 - 85, height / 2);
-    render_button.position(width / 2 + 5, height / 2);
-    export_button.position(width - 100, height - 60);
-  }
-
-  //--------------create sliders------------------
-
-  slider_r.position(-20 + width - width / 5, 10);
-  slider_r.size(width / 5);
-  slider_r.input(() => {
-    erase = true;
-  });
-  slider_r.changed(() => (erase = false));
-  slider_r.style("accent-color", "rgb(255,100,100)");
-
-  slider_g.position(-20 + width - width / 5, 30);
-  slider_g.size(width / 5);
-  slider_g.input(() => {
-    erase = true;
-  });
-  slider_g.changed(() => (erase = false));
-  slider_g.style("accent-color", "rgb(100,255,100)");
-
-  slider_b.position(-20 + width - width / 5, 50);
-  slider_b.size(width / 5);
-  slider_b.input(() => {
-    erase = true;
-  });
-  slider_b.changed(() => (erase = false));
-  slider_b.style("accent-color", "rgb(100,100,255)");
-
-  slider_a.style("transform-origin", "left center");
-  slider_a.style("transform", "rotate(-90deg)");
-  slider_a.position(20, height / 4 + 170);
-  slider_a.style("transform", "rotate(-90deg)");
-  slider_a.size(height / 4);
-  slider_a.input(() => {
-    erase = true;
-  });
-  slider_a.changed(() => (erase = false));
-  slider_a.class("slide");
-
-  slider_s.style("transform-origin", "left center");
-  slider_s.style("transform", "rotate(-90deg)");
-  slider_s.position(20, height / 2 + 180);
-  slider_s.size(height / 4);
-  slider_s.input(() => {
-    erase = true;
-  });
-  slider_s.changed(() => (erase = false));
-  slider_s.class("slide");
-
-  if (height < 390) {
-    slider_a.position(20, height / 4 + 190);
-    slider_s.position(50, height / 4 + 190);
-    slider_s.size(height / 3);
-    slider_a.size(height / 3);
-  }
-
-  slider_noise.position(width / 2 - width / 8, height - 50);
-  slider_noise.size(width / 4);
-  slider_noise.input(() => {
-    erase = true;
-  });
-  slider_noise.changed(() => (erase = false));
-  //slider_noise.class("slide");
-  slider_noise.style("accent-color", "#FF9800");
-
-  slider_tweak.position(100, 90);
-  slider_tweak.size(100);
-  slider_tweak.input(() => {
-    erase = true;
-  });
-  slider_tweak.changed(() => (erase = false));
-  slider_tweak.class("slide");
-}
-
-//func update fullscreen ui
-
-function update_fc() {
-  //------------fullscreen
-  if (!fullscreen()) {
-    fullscreen(true);
-
-    // slider_r.position(width-100, 10);
-    // slider_g.position(width-100, 30);
-    // slider_b.position(width-100, 50);
-    resizeCanvas(windowWidth, windowHeight);
-
-    updateUI();
-
-    fc_button.hide();
-  }
-}
 
 //save drawing-----------------------------------------------
 
@@ -880,6 +680,12 @@ function loadDrawing(file) {
     strokes.push(newStroke);
   }
 }
+
+
+
+
+
+
 
 //-----------------line object-------------------------------
 
