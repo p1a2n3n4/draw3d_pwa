@@ -376,7 +376,7 @@ function touchMoved() {
   if (
   move == false &&
   (!isPickingColor) &&
-  (erase)  &&
+  (!erase)  &&
   (touches.length !== 2) &&
   (touches.length !== 3)
 ) {
