@@ -103,28 +103,34 @@ eyedropper_button.mousePressed(() => {
   export_button.class("Buttons");
   export_button.size(40, 40);
 
-  turn_around.position(width - 90, 270);
+  //turn_around.position(width - 90, 270);
+  turn_around.position(width / 2 - 85, height / 2);
   turn_around.mousePressed(switch_anim);
   turn_around.class("Buttons");
   turn_around.size(80, 40);
 
-  render_button.position(width - 90, 330);
+  //render_button.position(width - 90, 330);
+  render_button.position(width / 2 + 5, height / 2);
   render_button.mousePressed(render);
   render_button.class("Buttons");
   render_button.size(80, 40);
 
   //--------import
 
-  import_button.position(width - 60, height - 180);
+  //import_button.position(width - 60, height - 180);
+  import_button.position(width / 2 - 40, height / 2 - 50);
   import_button.mousePressed(import_vis);
   import_button.class("Buttons");
-  import_button.size(50, 40);
+  import_button.size(80, 40);
+  //import_button.size(50, 40);
 
-  save_button.position(width - 90, 390);
+  //save_button.position(width - 90, 390);
+  save_button.position(width / 2 - 40, height / 2 + 50);
   save_button.mousePressed(saveDrawing);
   save_button.class("Buttons");
   save_button.size(80, 40);
-  fileInput.position(width - 250, height - 170);
+  //fileInput.position(width - 250, height - 170);
+  fileInput.position(width / 2 - 95, height / 2 - 80);
   fileInput.style("color", "white");
   fileInput.style("background", "#333");
   fileInput.style("border", "20px");
@@ -132,12 +138,12 @@ eyedropper_button.mousePressed(() => {
   fileInput.size(190, 20);
 
   if (height < 630) {
-    save_button.position(width / 2 - 40, height / 2 + 50);
-    fileInput.position(width / 2 - 95, height / 2 - 80);
-    import_button.size(80, 40);
-    import_button.position(width / 2 - 40, height / 2 - 50);
-    turn_around.position(width / 2 - 85, height / 2);
-    render_button.position(width / 2 + 5, height / 2);
+    // save_button.position(width / 2 - 40, height / 2 + 50);
+    // fileInput.position(width / 2 - 95, height / 2 - 80);
+    // import_button.size(80, 40);
+    // import_button.position(width / 2 - 40, height / 2 - 50);
+    // turn_around.position(width / 2 - 85, height / 2);
+    // render_button.position(width / 2 + 5, height / 2);
     export_button.position(width - 100, height - 60);
   }
 
